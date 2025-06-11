@@ -332,4 +332,5 @@ const lessons = [
             { type: 'note', duration: 6, symbol: '𝅝.' },
             { type: 'final_barline', duration: 0, symbol: '𝄂', isControl: true}
         ]
-    },
+    }
+]
