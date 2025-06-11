@@ -17,8 +17,8 @@ const messageArea = document.getElementById('message-area');
 let currentMode = 'lessons';
 let currentLessonIndex = 0;
 let activeTimeSignature = { beats: 4, beatType: 4 };
-let activePattern = [];
 let customPattern = [];
+let activePattern = [];
 let isPlaying = false;
 let isCountingDown = false;
 let selectedIndexForEditing = null;
@@ -158,7 +158,7 @@ function updateActivePatternAndTimeSignature() {
             beatType: parseInt(timeSignatureType.value)
         };
     }
-    // NOVA ALTERAÇÃO: Garante que a fórmula de compasso seja sempre atualizada no display.
+    
     timeSignatureDisplay.textContent = `${activeTimeSignature.beats}/${activeTimeSignature.beatType}`;
     
     renderRhythm();
@@ -212,7 +212,7 @@ function populateFigurePalette() {
         if(fig.isControl) button.classList.add('figure-button-control');
         button.textContent = fig.symbol;
         button.title = fig.name;
-        button.addEventListener('click', () => handlePaletteFigureClick(fig));
+        button.addEventListener('click', () => handlePaletteFigureClick({...fig}));
         figurePaletteDiv.appendChild(button);
     });
 }
@@ -243,7 +243,9 @@ function renderRhythm() {
         figureContainer.dataset.patternIndex = index;
         if (item.isControl) figureContainer.dataset.isControl = "true";
         if (selectedIndexForEditing === index) figureContainer.classList.add('selected-for-edit');
-        if (currentMode === 'freeCreate') figureContainer.addEventListener('click', () => handleFigureSelectionForEditing(index));
+        if (currentMode === 'freeCreate') {
+            figureContainer.addEventListener('click', () => handleFigureSelectionForEditing(index));
+        }
 
         const beatCounterElement = document.createElement('div');
         beatCounterElement.className = 'beat-counter-text';
@@ -253,12 +255,12 @@ function renderRhythm() {
                 const beatsArray = Array.from({length: beatValue}, (_, i) => Math.floor(startBeat) + i);
                 beatCounterElement.textContent = beatsArray.join(' ');
             } else {
-               const beatNumber = Math.floor(currentBeatsInMeasure) + 1;
-               const subBeatPosition = currentBeatsInMeasure - Math.floor(currentBeatsInMeasure);
-               if (subBeatPosition < tolerance) beatCounterElement.textContent = beatNumber;
-               else if (Math.abs(subBeatPosition - 0.25) < tolerance) beatCounterElement.textContent = 'e';
-               else if (Math.abs(subBeatPosition - 0.5) < tolerance) beatCounterElement.textContent = '+';
-               else if (Math.abs(subBeatPosition - 0.75) < tolerance) beatCounterElement.textContent = 'a';
+                const beatNumber = Math.floor(currentBeatsInMeasure) + 1;
+                const subBeatPosition = currentBeatsInMeasure - Math.floor(currentBeatsInMeasure);
+                if (subBeatPosition < tolerance) beatCounterElement.textContent = beatNumber;
+                else if (Math.abs(subBeatPosition - 0.25) < tolerance) beatCounterElement.textContent = 'e';
+                else if (Math.abs(subBeatPosition - 0.5) < tolerance) beatCounterElement.textContent = '+';
+                else if (Math.abs(subBeatPosition - 0.75) < tolerance) beatCounterElement.textContent = 'a';
             }
         }
 
@@ -293,9 +295,57 @@ function renderRhythm() {
 // --- USER INTERACTION ---
 function handlePaletteFigureClick(figure) {
     if (currentMode !== 'freeCreate' || isPlaying || isCountingDown) return;
-    const newFigure = { ...figure };
-    const beatValue = getBeatValue(newFigure.duration, activeTimeSignature);
-    const durationText = getDurationText(beatValue);
+    
+    const newFigure = figure;
+    const totalMeasureBeats = parseFloat(activeTimeSignature.beats);
+    const tolerance = 0.001;
+
+    // Create a temporary pattern to validate against
+    let tempPattern = [...customPattern];
+
+    if (selectedIndexForEditing !== null) {
+        // If replacing, put the new figure in the temporary pattern for validation
+        tempPattern[selectedIndexForEditing] = newFigure;
+    } else {
+        // If adding, push the new figure to the end for validation
+        tempPattern.push(newFigure);
+    }
+    
+    // Validate the entire temporary pattern for any measure overflows
+    let currentBeatsInMeasure = 0;
+    for (const item of tempPattern) {
+        if (item.isControl) {
+            // Treat repeat signs as barlines for validation purposes
+            if (item.type === 'repeat_start' || item.type === 'repeat_end') {
+                if (currentBeatsInMeasure > tolerance) { // If the measure isn't empty, it's an error
+                     messageArea.textContent = `Ação inválida. Ritornello deve ser colocado em uma barra de compasso.`;
+                     return;
+                }
+            }
+            continue;
+        };
+
+        const beatValue = getBeatValue(item.duration, activeTimeSignature);
+        currentBeatsInMeasure += beatValue;
+
+        // Check for overflow
+        if (currentBeatsInMeasure > totalMeasureBeats + tolerance) {
+            messageArea.textContent = `Ação inválida. O compasso excederia o limite de ${totalMeasureBeats} tempos.`;
+            // Optional: Add a visual flash effect for the error message
+            messageArea.classList.add('text-red-500', 'font-bold');
+            setTimeout(() => messageArea.classList.remove('text-red-500', 'font-bold'), 2000);
+            return;
+        }
+
+        // If a measure is filled exactly, reset the counter for the next one
+        if (Math.abs(currentBeatsInMeasure - totalMeasureBeats) < tolerance) {
+            currentBeatsInMeasure = 0;
+        }
+    }
+
+    // If the loop completes, the proposed change is valid. Apply it permanently.
+    const newFigureBeatValue = getBeatValue(newFigure.duration, activeTimeSignature);
+    const durationText = getDurationText(newFigureBeatValue);
     
     if (selectedIndexForEditing !== null) {
         customPattern.splice(selectedIndexForEditing, 1, newFigure);
@@ -305,8 +355,10 @@ function handlePaletteFigureClick(figure) {
         customPattern.push(newFigure);
         messageArea.textContent = `${newFigure.name} adicionado. Vale ${durationText}.`;
     }
+    
     updateActivePatternAndTimeSignature();
 }
+
 
 function handleFigureSelectionForEditing(index) {
     if (currentMode !== 'freeCreate' || isPlaying || isCountingDown) return;
@@ -391,15 +443,15 @@ async function startCountdownAndPlay() {
 
 function pauseRhythmExecution() {
      if (isPlaying) {
-          Tone.Transport.pause();
-          isPlaying = false;
-          playPauseButton.textContent = 'Tocar';
-          playPauseButton.classList.replace('btn-pause', 'btn-play');
-          messageArea.textContent = "Pausado.";
-          reEnableButtonsAfterErrorOrStop();
-          playPauseButton.disabled = false;
-          document.getElementById('reset-button').disabled = false;
-     }
+         Tone.Transport.pause();
+         isPlaying = false;
+         playPauseButton.textContent = 'Tocar';
+         playPauseButton.classList.replace('btn-pause', 'btn-play');
+         messageArea.textContent = "Pausado.";
+         reEnableButtonsAfterErrorOrStop();
+         playPauseButton.disabled = false;
+         document.getElementById('reset-button').disabled = false;
+    }
 }
 
 function resumeRhythmExecution() {
@@ -415,75 +467,92 @@ function resumeRhythmExecution() {
      }
 }
 
-function schedulePlayback(offset = 0) {
-    let time = offset;
-    let repeatStartIndex = -1; // Guarda o índice do início da repetição. -1 significa que não estamos em um trecho de repetição.
-    let repeatSection = [];    // Guarda as notas e pausas dentro do trecho de repetição.
+/**
+ * Processa o padrão com repetições e cria uma fila de reprodução plana.
+ * @param {Array} pattern O padrão rítmico com sinais de repetição.
+ * @returns {Array} Uma lista plana de objetos { item, originalIndex } prontos para serem agendados.
+ */
+function processPatternForPlayback(pattern) {
+    const playbackQueue = [];
+    let repeatSection = [];
+    let inRepeat = false;
 
-    // Usamos um loop 'for' para ter controle sobre a lógica de repetição
-    for (let i = 0; i < activePattern.length; i++) {
-        const item = activePattern[i];
-        const isRepeatStart = item.type === 'repeat_start';
-        const isRepeatEnd = item.type === 'repeat_end';
+    pattern.forEach((item, index) => {
+        const event = { 
+            item: item, 
+            originalIndex: index 
+        };
 
-        // Lógica para lidar com os sinais de controle
-        if (isRepeatStart) {
-            repeatStartIndex = i; // Marca o início da seção de repetição
-            repeatSection = [];   // Limpa a seção anterior para começar a gravar uma nova
-            // Agenda apenas a animação visual do sinal
-            transportEventIds.push(Tone.Transport.scheduleOnce(t => { Tone.Draw.schedule(() => highlightActiveVisualElement(i), t); }, time));
-            continue; // Pula para o próximo item do padrão
+        if (item.type === 'repeat_start') {
+            inRepeat = true;
+            repeatSection = []; 
+            playbackQueue.push(event); 
+            return;
+        }
+
+        if (item.type === 'repeat_end') {
+            playbackQueue.push(event); 
+            
+            if (inRepeat) {
+                // Comportamento padrão: repete a seção marcada
+                playbackQueue.push(...repeatSection);
+            } else {
+                // NOVO Comportamento: não há sinal de início, então repete do começo
+                const allPreviousEvents = playbackQueue.slice(0, playbackQueue.length - 1); 
+                playbackQueue.push(...allPreviousEvents);
+            }
+            
+            inRepeat = false;
+            repeatSection = [];
+            return;
         }
         
-        if (isRepeatEnd && repeatStartIndex !== -1) {
-            // Agenda a animação visual do sinal de fim
-            transportEventIds.push(Tone.Transport.scheduleOnce(t => { Tone.Draw.schedule(() => highlightActiveVisualElement(i), t); }, time));
-
-            // --- A MÁGICA ACONTECE AQUI: Agenda a repetição da seção ---
-            repeatSection.forEach((repeatedItem, repeatIndex) => {
-                const beatValue = getBeatValue(repeatedItem.duration, activeTimeSignature);
-                const toneDuration = Tone.Time(`${activeTimeSignature.beatType}n`).toSeconds() * beatValue;
-
-                if (repeatedItem.type === 'note') {
-                    transportEventIds.push(Tone.Transport.scheduleOnce(t => { noteSynth.triggerAttackRelease("C4", toneDuration, t); }, time));
-                }
-                
-                // Encontra o índice original do item repetido para o highlight
-                const originalIndex = repeatStartIndex + 1 + repeatIndex;
-                transportEventIds.push(Tone.Transport.scheduleOnce(t => { Tone.Draw.schedule(() => highlightActiveVisualElement(originalIndex), t); }, time));
-                
-                time += toneDuration;
-            });
-
-            // Reseta o estado da repetição
-            repeatStartIndex = -1;
-            repeatSection = [];
-            continue; // Pula para o próximo item do padrão
+        playbackQueue.push(event);
+        
+        if (inRepeat) {
+            repeatSection.push(event);
         }
+    });
 
-        // Se for uma nota ou pausa normal (não é um sinal de controle)
-        if (item.isControl) continue; // Ignora outras barras de controle como a final
+    return playbackQueue;
+}
 
+
+/**
+ * Agenda a reprodução da fila de eventos processada.
+ * @param {number} offset - O tempo de início do playback.
+ */
+function schedulePlayback(offset = 0) {
+    const playbackQueue = processPatternForPlayback(activePattern);
+    
+    let time = offset;
+
+    playbackQueue.forEach(event => {
+        const { item, originalIndex } = event;
+        
         const beatValue = getBeatValue(item.duration, activeTimeSignature);
         const toneDuration = Tone.Time(`${activeTimeSignature.beatType}n`).toSeconds() * beatValue;
 
-        // Agenda a execução normal da nota/pausa
+        transportEventIds.push(Tone.Transport.scheduleOnce(t => {
+            Tone.Draw.schedule(() => highlightActiveVisualElement(originalIndex), t);
+        }, time));
+
         if (item.type === 'note') {
-            transportEventIds.push(Tone.Transport.scheduleOnce(t => { noteSynth.triggerAttackRelease("C4", toneDuration, t); }, time));
+            transportEventIds.push(Tone.Transport.scheduleOnce(t => {
+                noteSynth.triggerAttackRelease("C4", toneDuration, t);
+            }, time));
         }
-        transportEventIds.push(Tone.Transport.scheduleOnce(t => { Tone.Draw.schedule(() => highlightActiveVisualElement(i), t); }, time));
         
-        // Se estivermos dentro de um trecho de repetição, grava a nota/pausa
-        if (repeatStartIndex !== -1) {
-            repeatSection.push(item);
-        }
-
         time += toneDuration;
-    }
+    });
 
-    // Agenda o fim da execução geral
-    transportEventIds.push(Tone.Transport.scheduleOnce(() => { stopRhythmExecution(); messageArea.textContent = "Fim da lição!"; }, time + 0.2));
+    transportEventIds.push(Tone.Transport.scheduleOnce(() => {
+        stopRhythmExecution();
+        messageArea.textContent = "Fim do exercício!";
+    }, time + 0.2));
 }
+
+
 function scheduleMetronome() {
     if (metronomeEventId) {
         metronomeEventId.stop(0).dispose();
@@ -515,33 +584,41 @@ function scheduleMetronome() {
 // --- Event Listeners Setup ---
 function setupEventListeners() {
     modeSelect.addEventListener('change', (e) => switchMode(e.target.value));
+    
     lessonSelect.addEventListener('change', (e) => {
         currentLessonIndex = parseInt(e.target.value);
         updateActivePatternAndTimeSignature();
     });
+
     [timeSignatureBeats, timeSignatureType].forEach(el => el.addEventListener('change', updateActivePatternAndTimeSignature));
+    
     document.getElementById('tempo-decrease').addEventListener('click', () => {
         const tempoEl = document.getElementById('tempo-display');
         tempoEl.textContent = Math.max(30, parseInt(tempoEl.textContent) - 5);
     });
+
     document.getElementById('tempo-increase').addEventListener('click', () => {
         const tempoEl = document.getElementById('tempo-display');
         tempoEl.textContent = Math.min(280, parseInt(tempoEl.textContent) + 5);
     });
+
     playPauseButton.addEventListener('click', () => {
         if (isPlaying) { pauseRhythmExecution(); } 
         else if (Tone.Transport.state === 'paused') { resumeRhythmExecution(); }
         else { startCountdownAndPlay(); }
     });
+
     document.getElementById('reset-button').addEventListener('click', () => {
         stopRhythmExecution();
         messageArea.textContent = "Ritmo resetado.";
     });
+
     document.getElementById('clear-custom-rhythm').addEventListener('click', () => {
          customPattern = [];
          updateActivePatternAndTimeSignature();
          messageArea.textContent = "Ritmo limpo.";
     });
+    
     deleteSelectedFigureButton.addEventListener('click', () => {
          if(selectedIndexForEditing === null) return;
          customPattern.splice(selectedIndexForEditing, 1);
@@ -560,4 +637,5 @@ function init() {
     console.log("Aplicação inicializada.");
 }
 
+// Inicia a aplicação quando o script for carregado
 init();
