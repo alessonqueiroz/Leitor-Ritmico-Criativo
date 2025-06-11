@@ -28,7 +28,6 @@ Clone o repositório ou baixe os arquivos para o seu computador.
 Bash
 
 git clone https://github.com/seu-usuario/leitor-ritmico-criativo.git
-(Lembre-se de substituir seu-usuario pelo seu nome de usuário no GitHub se você hospedar o projeto lá)
 
 Verifique a estrutura de pastas:
 
@@ -36,8 +35,8 @@ leitor-ritmico/
 │style.css
 │data.js
 │app.js
-└index.html
-└──README.md
+│index.html
+│README.md
 
 Abra o arquivo index.html diretamente em seu navegador de internet preferido (Google Chrome, Firefox, etc.).
 
