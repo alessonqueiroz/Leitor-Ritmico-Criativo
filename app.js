@@ -158,7 +158,7 @@ function updateActivePatternAndTimeSignature() {
             beatType: parseInt(timeSignatureType.value)
         };
     }
-    
+    // NOVA ALTERAÇÃO: Garante que a fórmula de compasso seja sempre atualizada no display.
     timeSignatureDisplay.textContent = `${activeTimeSignature.beats}/${activeTimeSignature.beatType}`;
     
     renderRhythm();
@@ -320,101 +320,6 @@ function handleFigureSelectionForEditing(index) {
         messageArea.textContent = `Item ${index + 1} (${figureDef.name}) selecionado. Vale ${getDurationText(beatValue)}.`;
     }
     renderRhythm(); 
-}
-
-/**
- * Gera um padrão rítmico com base na dificuldade e na fórmula de compasso.
- * @param {string} difficulty - "fácil", "moderado" ou "difícil".
- * @param {object} timeSignature - O objeto com a fórmula de compasso ativa.
- * @returns {Array} - Um novo padrão rítmico.
- */
-function generateAIRhythm(difficulty, timeSignature) {
-    const beatsPerMeasure = timeSignature.beats;
-    const numMeasures = 8;
-
-    // 1. Define quais figuras são permitidas para cada dificuldade
-    const getAllowedFigures = (diff) => {
-        const notes = rhythmicFigures.filter(f => f.type === 'note' && f.duration > 0);
-        if (diff === 'fácil') {
-            // Apenas figuras de 1 tempo ou mais
-            return notes.filter(f => getBeatValue(f.duration, timeSignature) >= 1);
-        }
-        if (diff === 'moderado') {
-            // Adiciona figuras de meio tempo (colcheias)
-            return notes.filter(f => getBeatValue(f.duration, timeSignature) >= 0.5);
-        }
-        // 'difícil' usa todas as figuras até a semicolcheia
-        return notes.filter(f => getBeatValue(f.duration, timeSignature) >= 0.25);
-    };
-
-    const allowedFigures = getAllowedFigures(difficulty);
-    let finalPattern = [];
-
-    // 2. Cria 8 compassos, um de cada vez
-    for (let i = 0; i < numMeasures; i++) {
-        let beatsInMeasure = 0;
-        
-        while (beatsInMeasure < beatsPerMeasure) {
-            const remainingBeats = beatsPerMeasure - beatsInMeasure;
-            
-            // Filtra apenas as figuras que cabem no espaço restante do compasso
-            const fittingFigures = allowedFigures.filter(f => {
-                // Adicionamos uma pequena tolerância para lidar com imprecisões de ponto flutuante
-                return getBeatValue(f.duration, timeSignature) <= (remainingBeats + 0.001);
-            });
-
-            let figureToAdd;
-            if (fittingFigures.length > 0) {
-                // Escolhe uma figura aleatória entre as que cabem
-                figureToAdd = fittingFigures[Math.floor(Math.random() * fittingFigures.length)];
-            } else {
-                // Se, por algum motivo, nada couber (raro), saímos do loop para evitar um loop infinito.
-                break;
-            }
-            
-            finalPattern.push({ ...figureToAdd });
-            beatsInMeasure += getBeatValue(figureToAdd.duration, timeSignature);
-        }
-    }
-    
-    return finalPattern;
-}
-
-/**
- * Lida com o clique no botão de sugestão da IA.
- */
-function handleAISuggestClick() {
-    // 1. Pergunta ao usuário a dificuldade desejada
-    const promptMessage = "Qual o nível de dificuldade do exercício?\nDigite: fácil, moderado ou difícil";
-    const rawInput = prompt(promptMessage);
-
-    // Se o usuário cancelar, não faz nada
-    if (rawInput === null) return;
-    
-    const difficulty = rawInput.trim().toLowerCase();
-
-    // 2. Valida a entrada
-    if (!['fácil', 'moderado', 'difícil'].includes(difficulty)) {
-        messageArea.textContent = "Dificuldade inválida. Por favor, tente novamente.";
-        return;
-    }
-
-    // Força a mudança para o modo de Criação Livre, se já não estiver nele
-    if (currentMode !== 'freeCreate') {
-        modeSelect.value = 'freeCreate';
-        switchMode('freeCreate');
-    }
-
-    messageArea.textContent = `✨ A IA está gerando um exercício ${difficulty}...`;
-
-    // 3. Simula um pequeno "pensamento" da IA e gera o ritmo
-    setTimeout(() => {
-        const newPattern = generateAIRhythm(difficulty, activeTimeSignature);
-        customPattern = newPattern; // Define o padrão gerado como o ritmo customizado
-        updateActivePatternAndTimeSignature(); // Atualiza a tela
-        
-        messageArea.textContent = `Exercício ${difficulty} com 8 compassos foi gerado!`;
-    }, 500); // Meio segundo de delay para uma melhor experiência do usuário
 }
 
 // --- PLAYBACK LOGIC ---
@@ -590,8 +495,6 @@ function setupEventListeners() {
          updateActivePatternAndTimeSignature();
          messageArea.textContent = "Figura apagada.";
     });
-    
-    document.getElementById('ai-suggest-button').addEventListener('click', handleAISuggestClick);
 }
 
 // --- Init ---
