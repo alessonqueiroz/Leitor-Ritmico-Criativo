@@ -417,19 +417,73 @@ function resumeRhythmExecution() {
 
 function schedulePlayback(offset = 0) {
     let time = offset;
-    activePattern.forEach((item, index) => {
-        if (item.isControl) return;
+    let repeatStartIndex = -1; // Guarda o índice do início da repetição. -1 significa que não estamos em um trecho de repetição.
+    let repeatSection = [];    // Guarda as notas e pausas dentro do trecho de repetição.
+
+    // Usamos um loop 'for' para ter controle sobre a lógica de repetição
+    for (let i = 0; i < activePattern.length; i++) {
+        const item = activePattern[i];
+        const isRepeatStart = item.type === 'repeat_start';
+        const isRepeatEnd = item.type === 'repeat_end';
+
+        // Lógica para lidar com os sinais de controle
+        if (isRepeatStart) {
+            repeatStartIndex = i; // Marca o início da seção de repetição
+            repeatSection = [];   // Limpa a seção anterior para começar a gravar uma nova
+            // Agenda apenas a animação visual do sinal
+            transportEventIds.push(Tone.Transport.scheduleOnce(t => { Tone.Draw.schedule(() => highlightActiveVisualElement(i), t); }, time));
+            continue; // Pula para o próximo item do padrão
+        }
+        
+        if (isRepeatEnd && repeatStartIndex !== -1) {
+            // Agenda a animação visual do sinal de fim
+            transportEventIds.push(Tone.Transport.scheduleOnce(t => { Tone.Draw.schedule(() => highlightActiveVisualElement(i), t); }, time));
+
+            // --- A MÁGICA ACONTECE AQUI: Agenda a repetição da seção ---
+            repeatSection.forEach((repeatedItem, repeatIndex) => {
+                const beatValue = getBeatValue(repeatedItem.duration, activeTimeSignature);
+                const toneDuration = Tone.Time(`${activeTimeSignature.beatType}n`).toSeconds() * beatValue;
+
+                if (repeatedItem.type === 'note') {
+                    transportEventIds.push(Tone.Transport.scheduleOnce(t => { noteSynth.triggerAttackRelease("C4", toneDuration, t); }, time));
+                }
+                
+                // Encontra o índice original do item repetido para o highlight
+                const originalIndex = repeatStartIndex + 1 + repeatIndex;
+                transportEventIds.push(Tone.Transport.scheduleOnce(t => { Tone.Draw.schedule(() => highlightActiveVisualElement(originalIndex), t); }, time));
+                
+                time += toneDuration;
+            });
+
+            // Reseta o estado da repetição
+            repeatStartIndex = -1;
+            repeatSection = [];
+            continue; // Pula para o próximo item do padrão
+        }
+
+        // Se for uma nota ou pausa normal (não é um sinal de controle)
+        if (item.isControl) continue; // Ignora outras barras de controle como a final
+
         const beatValue = getBeatValue(item.duration, activeTimeSignature);
         const toneDuration = Tone.Time(`${activeTimeSignature.beatType}n`).toSeconds() * beatValue;
-         if (item.type === 'note') {
-             transportEventIds.push(Tone.Transport.scheduleOnce(t => { noteSynth.triggerAttackRelease("C4", toneDuration, t); }, time));
-         }
-         transportEventIds.push(Tone.Transport.scheduleOnce(t => { Tone.Draw.schedule(() => highlightActiveVisualElement(index), t); }, time));
-         time += toneDuration;
-    });
+
+        // Agenda a execução normal da nota/pausa
+        if (item.type === 'note') {
+            transportEventIds.push(Tone.Transport.scheduleOnce(t => { noteSynth.triggerAttackRelease("C4", toneDuration, t); }, time));
+        }
+        transportEventIds.push(Tone.Transport.scheduleOnce(t => { Tone.Draw.schedule(() => highlightActiveVisualElement(i), t); }, time));
+        
+        // Se estivermos dentro de um trecho de repetição, grava a nota/pausa
+        if (repeatStartIndex !== -1) {
+            repeatSection.push(item);
+        }
+
+        time += toneDuration;
+    }
+
+    // Agenda o fim da execução geral
     transportEventIds.push(Tone.Transport.scheduleOnce(() => { stopRhythmExecution(); messageArea.textContent = "Fim da lição!"; }, time + 0.2));
 }
-
 function scheduleMetronome() {
     if (metronomeEventId) {
         metronomeEventId.stop(0).dispose();
