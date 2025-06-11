@@ -1,305 +1,160 @@
+:root {
+    --primary-color: #5b21b6; /* violet-700 */
+    --primary-color-dark: #4c1d95; /* violet-800 */
+    --secondary-color: #14b8a6; /* teal-500 */
+    --background-color: #f8fafc; /* slate-50 */
+    --panel-bg: rgba(255, 255, 255, 0.8);
+    --text-dark: #1e293b; /* slate-800 */
+    --text-medium: #475569; /* slate-600 */
+    --text-light: #64748b; /* slate-500 */
+    --border-color: #e2e8f0; /* slate-200 */
+}
+
 body {
-    font-family: 'Inter', sans-serif;
-    background-image: url(fundo\ da\ tela.png);
-    background-size: 1550px;
+    font-family: 'Poppins', sans-serif;
+    background-color: var(--background-color);
+    background-image: url("imagem\ do\ fundo.png");
+    background-size: 150px;
     display: flex;
     flex-direction: column;
     min-height: 100vh;
-
-    color: #334155; /* Cor de texto padrão */
+    color: var(--text-medium);
 }
 
-/* Corrigido de .main-content para main, para corresponder ao HTML <main> */
 main {
-    flex-grow: 1; /* Faz o conteúdo principal expandir e empurrar o footer para baixo */
+    flex-grow: 1; 
+}
+
+.header-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.app-logo {
+    width: 280px;
+    margin-bottom: 1.0rem;
 }
 
 .figure-container {
     display: flex;
     flex-direction: column;
     align-items: center;
-    margin: 0 3px; /* Pequeno espaçamento horizontal entre as figuras */
-    position: relative; /* Para posicionamento de ícones de edição no futuro, se necessário */
+    justify-content: flex-end;
+    margin: 0 4px;
+    margin-bottom: 1.5rem;
+    position: relative;
+    min-height: 110px;
 }
 
-.note-item, .barline-item, .time-signature-item {
-    transition: transform 0.1s ease-in-out, background-color 0.1s ease-in-out, opacity 0.1s ease-in-out;
+.note-item, .control-bar-item, .time-signature-item {
+    transition: all 0.2s ease-in-out;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 2.0rem; /* Tamanho dos símbolos das figuras */
+    font-size: 2.25rem;
 }
 
 .syllable-text {
-    font-size: 0.875rem; /* Tamanho do texto da sílaba */
-    color: #475569;
+    font-size: 0.875rem;
+    color: var(--text-medium);
     margin-top: 4px;
-    min-height: 1.5em; /* Garante altura mesmo sem texto, para alinhamento */
+    min-height: 1.5em;
     font-style: italic;
 }
 
-/* Estilos para a figura atualmente em destaque durante a reprodução */
+.beat-counter-text {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-light);
+    min-height: 1.2em;
+    margin-bottom: 2px;
+    text-align: center;
+    letter-spacing: 0.1em;
+}
+
+.barline-container {
+    align-self: stretch;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 6px;
+    padding-bottom: 1.5rem;
+}
+
+.barline-item {
+    width: 1.5px;
+    height: 70px;
+    background-color: #cbd5e1;
+}
+
 .highlight .note-item {
-    background-color: #FACC15 !important; /* Amarelo para destaque, !important para sobrescrever Tailwind/outros */
-    transform: scale(1.15); /* Aumenta um pouco o tamanho */
-    color: #1E293B !important; /* Cor do texto da figura destacada */
-    box-shadow: 0 0 15px rgba(250, 204, 21, 0.7); /* Sombra suave amarela */
+    background-color: #facc15 !important;
+    transform: scale(1.15);
+    color: var(--text-dark) !important;
+    box-shadow: 0 0 15px rgba(250, 204, 21, 0.7);
 }
 
-.highlight .syllable-text {
-    font-weight: 600; /* Negrito para a sílaba destacada */
-    color: #B45309; /* Cor mais escura para a sílaba destacada */
-}
-
-/* Estilização da barra de rolagem para o display de ritmo */
-/* Para WebKit/Blink (Chrome, Safari, Edge, Opera) */
-#rhythm-display::-webkit-scrollbar { 
-    height: 10px; 
-}
-#rhythm-display::-webkit-scrollbar-track { 
-    background: #E2E8F0; 
-    border-radius: 10px; 
-}
-#rhythm-display::-webkit-scrollbar-thumb { 
-    background: #94A3B8; 
-    border-radius: 10px; 
-}
-#rhythm-display::-webkit-scrollbar-thumb:hover { 
-    background: #64748B; 
-}
-/* Para Firefox */
-#rhythm-display {
-    scrollbar-width: thin;
-    scrollbar-color: #94A3B8 #E2E8F0;
-}
-
-
-/* Estilos para os botões na paleta de figuras */
-.figure-button {
-    min-width: 60px; /* Largura mínima base */
-    background-color: #FFFFFF; /* Cor de fundo base */
-    border: 1px solid #CBD5E1; /* Borda base */
-    color: #1E293B; /* Cor do texto base */
-    /* padding, font-size, border-radius, shadow, transitions são aplicados via classes Tailwind no JS */
-}
-
-.figure-button:hover {
-    background-color: #F0FDFA; /* Cor suave ao passar o mouse */
-    border-color: #06B6D4; /* Cor da borda no hover */
-    color: #0E7490; /* Cor do texto no hover */
-}
-
-.figure-button:active {
-    background-color: #CFFAFE; /* Cor ao clicar */
-}
-
-/* Estilo para os números dentro do display de fórmula de compasso */
-.time-signature-item span {
-    line-height: 0.9; /* Ajusta o espaçamento vertical dos números */
+.highlight .syllable-text, .highlight .beat-counter-text {
     font-weight: 700;
+    color: #b45309;
 }
 
-/* Estilo para os painéis principais (controles, criador de ritmo) */
+#rhythm-display-container {
+     display: flex;
+     align-items: flex-end;
+     flex-wrap: wrap;
+}
+
 .panel {
-    background-color: rgba(255, 255, 255, 0.9); /* Fundo branco semi-transparente */
-    backdrop-filter: blur(10px); /* Efeito de vidro fosco */
-    border-radius: 1rem;
+    background-color: var(--panel-bg);
+    backdrop-filter: blur(12px);
+    border-radius: 1.25rem;
     padding: 1.5rem;
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); /* Sombra suave */
+    border: 1px solid rgba(255,255,255,0.2);
+    box-shadow: 0 10px 25px -5px rgba(0,0,0,0.08), 0 4px 6px -2px rgba(0,0,0,0.05);
 }
 
-.main-title {
-    font-family:Helvetica;
-    font-size: 40px;
-    color: #6135a7; /* Cor roxa para o título principal */
-    text-shadow: 1px 1px 3px rgba(168, 168, 168, 0.1); /* Sombra leve no texto */
-}
-
-/* Estilos base para botões de ação */
 .btn-action {
-    color: white;
-    border-radius: 0.5rem;
-    padding: 0.75rem 1.5rem;
-    transition: all 0.2s ease-in-out;
-    font-weight: 600;
-    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
-    display: inline-flex; /* Para alinhar ícones (se houver) e texto */
-    align-items: center;
-    justify-content: center;
+    color: white; border-radius: 0.5rem; padding: 0.75rem 1.5rem; transition: all 0.2s ease-in-out;
+    font-weight: 600; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+    display: inline-flex; align-items: center; justify-content: center; border: none;
 }
 
-.btn-action:hover:not(:disabled) {
-    transform: translateY(-2px) scale(1.02); /* Efeito sutil de elevação */
-    box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
-}
+.btn-action:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05); }
+.btn-action:active:not(:disabled) { transform: translateY(-1px) scale(0.98); }
+.btn-action:disabled { opacity: 0.6; cursor: not-allowed; }
 
-.btn-action:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-}
+.btn-play { background-color: #16a34a; } .btn-play:hover:not(:disabled) { background-color: #15803d; }
+.btn-pause { background-color: #f59e0b; } .btn-pause:hover:not(:disabled) { background-color: #d97706; }
+.btn-reset { background-color: #4b5563; } .btn-reset:hover:not(:disabled) { background-color: #374151; }
+.btn-clear { background-color: #dc2626; } .btn-clear:hover:not(:disabled) { background-color: #b91c1c; }
+.btn-ai-suggest { background: linear-gradient(45deg, var(--primary-color), var(--secondary-color)); } .btn-ai-suggest:hover:not(:disabled) { background-size: 150% 150%; }
+.btn-delete-fig { background-color: #ef4444; } .btn-delete-fig:hover:not(:disabled) { background-color: #dc2626; }
 
-/* Variações de cor para botões de ação */
-.btn-play { background-color: #16A34A; } /* Verde */
-.btn-play:hover:not(:disabled) { background-color: #15803D; }
+#countdown-display { font-size: 4rem; color: var(--primary-color); font-weight: 700; min-height: 80px; }
+.note-item.bg-blue-500 { background-color: var(--secondary-color) !important; }
+.note-item.bg-gray-300 { background-color: #d1d5db !important; color: #374151 !important; }
+.figure-legend { margin-top: 1.5rem; padding: 1rem; background-color: var(--panel-bg); backdrop-filter: blur(5px); border-radius: 0.75rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03); }
+.legend-title { font-size: 1.125rem; font-weight: 600; color: var(--primary-color-dark); margin-bottom: 0.75rem; text-align: center; }
+.legend-item { display: flex; align-items: center; margin-bottom: 0.5rem; font-size: 0.9rem; }
+.legend-symbol { font-size: 1.75rem; margin-right: 0.75rem; min-width: 30px; text-align: center; color: var(--secondary-color); }
+.legend-name { color: var(--text-dark); }
+footer { text-align: center; padding: 1.5rem; color: var(--text-light); font-size: 0.875rem; margin-top: auto; }
+#rhythm-display.edit-mode .figure-container { cursor: pointer; }
+#rhythm-display.edit-mode .figure-container:hover .note-item, #rhythm-display.edit-mode .figure-container:hover .control-bar-item { opacity: 0.8; box-shadow: 0 0 8px rgba(0,0,0,0.2); }
+.figure-container.selected-for-edit .note-item, .figure-container.selected-for-edit .control-bar-item { outline: 3px solid #f59e0b; outline-offset: 3px; transform: scale(1.05); box-shadow: 0 0 10px rgba(245, 158, 11, 0.5); }
+.figure-container.selected-for-edit .note-item { background-color: #fef3c7 !important; color: #92400e !important; }
+.figure-container.selected-for-edit .syllable-text { font-weight: 700; color: #f59e0b; }
+.control-bar-item { display: flex; align-items: center; justify-content: center; box-sizing: border-box; line-height: 1; min-height: 3.75rem; padding: 0.5rem 0.25rem; color: var(--text-dark); font-size: 4.00rem; }
+.final-barline-visual-style { font-size: 4.5rem; color: var(--text-light); font-weight: 300; }
+.repeat-barline-visual-style { color: var(--text-dark); font-size: 4.5rem; font-weight: normal; }
+.figure-container[data-is-control="true"] .syllable-text, .figure-container[data-is-control="true"] .beat-counter-text { display: none; }
 
-.btn-pause { 
-    background-color: #F59E0B; /* Amarelo/Laranja */
-    color: #422006 !important; 
-}
-.btn-pause:hover:not(:disabled) { background-color: #D97706; }
-
-.btn-reset { background-color: #4B5563; } /* Cinza */
-.btn-reset:hover:not(:disabled) { background-color: #374151; }
-
-.btn-clear { background-color: #DC2626; } /* Vermelho */
-.btn-clear:hover:not(:disabled) { background-color: #B91C1C; }
-
-.btn-ai-suggest { background-color: #7C3AED; } /* Roxo */
-.btn-ai-suggest:hover:not(:disabled) { background-color: #6D28D9; }
-
-/* --- NOVOS ESTILOS / ESTILOS MODIFICADOS ABAIXO --- */
-
-/* Estilo para o novo botão "Apagar Selecionada" */
-.btn-delete-fig {
-    background-color: #EF4444; /* Vermelho (similar ao Limpar Ritmo para consistência) */
-}
-.btn-delete-fig:hover:not(:disabled) {
-    background-color: #DC2626; /* Vermelho mais escuro no hover */
-}
-
-#countdown-display {
-    font-size: 4rem; 
-    color: #4338CA; 
-    font-weight: 700;
-    min-height: 80px; 
-}
-
-/* Customização específica para cores de fundo de notas */
-.note-item.bg-blue-500 { 
-    background-color: #0EA5E9 !important; 
-}
-
-.note-item.bg-gray-300 { 
-    background-color: #D1D5DB !important; 
-    color: #374151 !important; 
-}
-
-/* Estilos para a legenda de figuras */
-.figure-legend {
-    margin-top: 1.5rem;
-    padding: 1rem;
-    background-color: rgba(255, 255, 255, 0.8); 
-    backdrop-filter: blur(5px); 
-    border-radius: 0.75rem;
-    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03);
-}
-
-.legend-title {
-    font-size: 1.125rem;
-    font-weight: 600;
-    color: #4C1D95; 
-    margin-bottom: 0.75rem;
-    text-align: center;
-}
-
-.legend-item {
-    display: flex;
-    align-items: center;
-    margin-bottom: 0.5rem;
-    font-size: 0.9rem; 
-}
-
-.legend-symbol {
-    font-size: 1.75rem; 
-    margin-right: 0.75rem;
-    min-width: 30px; 
-    text-align: center;
-    color: #3B82F6; 
-}
-
-.legend-name {
-    color: #374155; 
-}
-
-/* Corrigido de .footer para footer, para estilizar a tag <footer> */
-footer {
-    text-align: center;
-    padding: 1.5rem;
-    color: #4B5563;
-    font-size: 0.875rem;
-    margin-top: auto; 
-}
-
-/* Estilos para a funcionalidade de edição de figuras */
-#rhythm-display.edit-mode .figure-container { /* Aplica cursor apenas quando edit-mode está ativo */
-    cursor: pointer;
-    transition: box-shadow 0.2s ease-in-out; /* Adiciona transição suave para o hover */
-}
-
-#rhythm-display.edit-mode .figure-container:hover .note-item {
-    opacity: 0.8; /* Leve feedback visual no hover da figura */
-    box-shadow: 0 0 8px rgba(0,0,0,0.2); /* Sombra sutil no hover */
-}
-
-.figure-container.selected-for-edit .note-item {
-    outline: 3px solid #D97706; /* Laranja para destaque de edição */
-    outline-offset: 3px; /* Pequeno espaçamento entre a borda e o outline */
-    background-color: #FEF3C7 !important; /* Um amarelo bem claro para diferenciar do highlight de playback */
-    color: #92400E !important; /* Cor de texto escura para contraste no fundo amarelo */
-    transform: scale(1.05); /* Leve aumento para indicar seleção */
-    box-shadow: 0 0 10px rgba(217, 119, 6, 0.5); /* Sombra sutil na cor do outline */
-}
-
-.figure-container.selected-for-edit .syllable-text {
-    font-weight: 700; /* Negrito */
-    color: #D97706; /* Mesma cor laranja do outline */
-}
-
-/* Estilos para os novos símbolos de controle (repetição, final) no display de ritmo */
-.control-bar-item {
-    display: flex;
-    align-items: center; /* Centraliza o símbolo verticalmente */
-    justify-content: center;
-    box-sizing: border-box;
-    line-height: 1;      /* Ajuda a controlar a altura do caractere de fonte grande */
-    min-height: 3.75rem; /* Altura mínima de caixa similar à de uma nota com padding p-3. (aprox. 2.25rem font + 1.5rem padding) */
-    padding: 0.5rem 0.25rem; /* Padding vertical e horizontal base */
-    /* Estilos default para símbolos de controle - serão sobrescritos se necessário por classes mais específicas */
-    color: #000000;     /* Default: text-slate-700 (escuro) */
-    font-size: 4.00rem;  /* Default: tamanho um pouco maior para destaque */
-}
-
-/* Estilo específico para a BARRA FINAL DUPLA (𝄈) para se assemelhar à barra automática */
-.final-barline-visual-style {
-    font-size: 4.5rem;     /* Mesmo font-size da barra automática ('|') definida no JS */
-    color: #000000;      /* Cor text-slate-500 (cinza mais claro, igual à barra automática) */
-    font-weight: 300;    /* font-light (igual à barra automática) */
-}
-
-/* Estilo específico para as BARRAS DE REPETIÇÃO (𝄆, 𝄇) */
-.repeat-barline-visual-style {
-    color: #000000;     /* Mantém a cor mais escura (text-slate-700) para destaque */
-    font-size: 4.5rem;  /* Mantém o tamanho um pouco maior para destaque */
-    font-weight: normal; /* Ou 400, se quiser diferenciar do font-light da barra final */
-}
-
-/* Se um item de controle estiver selecionado para edição (ESTILO EXISTENTE, VERIFIQUE SE PRECISA DE AJUSTE) */
-.figure-container.selected-for-edit .control-bar-item { /* Afeta a caixa do item de controle */
-    outline: 3px solid #D97706; 
-    outline-offset: 2px;
-    /* O background pode ser geral para todos os .control-bar-item selecionados */
-    background-color: #FEFBF2 !important; 
-}
-/* Ajuste a cor do texto do símbolo SELECIONADO para ter bom contraste com o fundo de seleção */
-.figure-container.selected-for-edit .final-barline-visual-style {
-    color: #ae6565 !important; /* Cor escura para contraste com fundo FEFBF2 */
-}
-.figure-container.selected-for-edit .repeat-barline-visual-style {
-    color: #ae6565 !important; /* Cor escura para contraste com fundo FEFBF2 */
-}
-
-
-/* Remove a sílaba (ou garante que não haja espaço para ela) para barras de controle (ESTILO EXISTENTE) */
-.figure-container[data-is-control="true"] .syllable-text {
-    display: none;
+/* Regra para centralizar as barras */
+.figure-container[data-is-control="true"] {
+    align-self: center;
+    margin-bottom: 0;
+    padding-bottom: 1.5rem;
 }
